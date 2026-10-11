@@ -1,0 +1,6 @@
+{
+  "name": "LuxeLane Accessories",
+  "description": "Modern e-commerce platform for affordable fashion & lifestyle accessories with Razorpay/COD checkout and admin operations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
