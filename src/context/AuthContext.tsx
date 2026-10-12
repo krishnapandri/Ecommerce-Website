@@ -62,7 +62,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const switchDemoRole = (role: 'admin' | 'customer') => {
     const user = api.getUsers().find((u) => u.role === role);
     if (user) {
-      api.setCurrentUser(user);
+      api.login(user.email, role === 'admin' ? 'admin123' : 'password123');
       setCurrentUserState({ ...user });
     }
   };

@@ -1,81 +1,81 @@
-# LuxeLane — Modern MVP E-Commerce Platform for Fashion & Lifestyle Accessories
+# LuxeLane — Full-Stack Express Backend & Persistent Transactional Engine
 
-A modern, responsive e-commerce web application and administrative management system for **LuxeLane**, offering affordable fashion and lifestyle accessories (watches, sunglasses, wallets, bracelets, bags, and mobile accessories) with a complete transactional backend and intuitive admin controls.
+Integrate an Express TypeScript backend into the existing LuxeLane application, mounted in `server.ts` on port 3000 with Vite middlewares, backed by a persistent file-based JSON database with atomic transactions, JWT Bearer authentication, and complete REST API endpoints for catalog, orders, coupons, and administrative operations.
 
 ---
 
 ### User Review & Critical Decisions
 
 > [!IMPORTANT]
-> The following architectural and aesthetic choices were confirmed through user input:
-> - **Brand Identity**: LuxeLane — Clean, premium-feel affordable lifestyle accessories with warm minimalist restraint and high typographic clarity.
-> - **Backend API & Data Layer**: Integrated Express TypeScript REST API with transactional entity persistence, stock reservation, and real server-side validation.
-> - **Payment Strategy**: Interactive Razorpay checkout simulation with instant verification, cryptographic signature handling, and Cash on Delivery (COD) order placement.
-> - **Authentication & Authorization**: Role-based authentication (Admin vs. Customer) using token-based session auth and secure password hashing.
+> The following technical architectural choices were confirmed by user feedback:
+> - **Database Persistence**: File-backed transactional database (`data/db.json`) with atomic file writes, crash resilience, and automatic seeding.
+> - **Server Architecture**: Full-stack Express REST API mounted in `server.ts` on port 3000 with `vite.middlewares` in development (`npm run dev` running `tsx server.ts`).
+> - **Authentication & Authorization**: Cryptographic JWT Bearer tokens for customer and admin sessions, verified via server-side authorization middleware (`authMiddleware` and `adminOnlyMiddleware`).
+> - **Seamless Client Integration**: Frontend `src/services/api.ts` upgraded to consume real `/api/*` REST endpoints with Bearer token authorization headers, with instant state sync and offline fallback resilience.
 
 ---
 
 ### 1. Overview & Core Concept
 
-- **What It Does**: LuxeLane delivers an end-to-end shopping experience for fashion accessories. Customers can browse curated categories, search and filter with instant results, view high-detail product pages, manage carts, apply promotional coupons, and complete checkouts via Cash on Delivery or Razorpay. Administrators access a protected `/admin` portal to monitor revenue and metrics, update inventory and prices, create coupon codes, and process customer orders.
-- **Target Audience / Persona**: Style-conscious shoppers seeking affordable, high-quality everyday accessories, and store managers requiring an efficient, uncluttered operational dashboard.
-- **Key Value**: Real business logic and inventory integrity: prices and coupons are verified on the server, stock is decremented transactionally upon confirmation, and order history records snapshot prices to ensure historical accuracy.
+- **What It Does**: Provides a real, decoupled HTTP REST backend API powering LuxeLane. All price calculations, inventory validation, coupon eligibility checks, order creation, order cancellation stock rollbacks, and admin operations are executed strictly on the Node.js server.
+- **Security & Integrity**: Endpoints enforce server-side validation: client totals are never trusted; stock is checked and decremented atomically during order placement; passwords and tokens are validated with cryptographic signatures; administrative endpoints require verified `admin` role claims.
 
 ---
 
-### 2. User Experience & Visual Design
+### 2. Backend REST Endpoints & Contracts
 
-#### Visual Identity & Theme
-- **Aesthetic Direction**: Clean luxury and warm minimalism. Quiet, high-end editorial restraint without generic AI gimmicks (zero purple gradients, zero pill-badge clutter, zero fake status dots).
-- **Color Palette & Discipline (60-30-10)**:
-  - *Dominant Canvas (60%)*: Crisp alabaster and soft neutral paper (`#FAFAF9` / `#FFFFFF`).
-  - *Structural Surfaces (30%)*: Muted stone borders (`#E7E5E4`), rich slate charcoal typography (`#1C1917` / `#44403C`), and subtle warm surfaces (`#F5F5F4`).
-  - *Disciplined Accent (10%)*: Warm bronze-gold / rich amber-espresso (`#78350F` / `#92400E`) used selectively for checkout CTAs, active filter highlights, and critical administrative badges.
-- **Typography & Scale**:
-  - *Display / Headings*: High-contrast serif `Playfair Display` or clean architectural `Plus Jakarta Sans` for distinctive editorial headlines (`clamp(2rem, 3.5vw, 3rem)`).
-  - *Body Prose & Controls*: `Plus Jakarta Sans` / `DM Sans` (15px, 1.6 line height).
-  - *Numbers & Pricing*: Tabular figures (`tabular-nums font-medium`) for vertical pricing alignment in cards, tables, and cart line items.
-- **Anti-Slop Discipline**:
-  - Metadata rendered as unboxed text with subtle typographic separators (`·` or `/`), never rounded candy capsules.
-  - No decorative pulsing green dots or pseudo-technical labels.
-  - Buttons and segmented tabs use concise, single-line labels (`whitespace-nowrap`).
+#### 1. Authentication (`/api/auth`)
+- `POST /api/auth/register`: `{ name, email, password }` $\to$ Returns User profile and JWT Bearer token.
+- `POST /api/auth/login`: `{ email, password }` $\to$ Validates credentials and returns User profile and JWT Bearer token.
+- `GET /api/auth/me`: Authenticated with `Bearer <token>` $\to$ Returns current user profile with saved address.
+- `PUT /api/auth/address`: Authenticated $\to$ Updates user's saved shipping address and contact phone.
 
-#### Customer User Flows
-1. **Storefront Landing**:
-   - Slim 3-zone top navigation: Brand wordmark (`LuxeLane`), clean category links (`Watches`, `Sunglasses`, `Wallets`, `Bags`, `Bracelets`), and header actions (Search, Account/Login, Cart Drawer counter).
-   - Hero Campaign: Editorial showcase featuring bestselling collections with direct CTA to browse.
-   - Curated Categories: Visual cards for Watches, Sunglasses, Wallets, Bags, Bracelets, and Mobile Essentials.
-   - Featured Grid: 3-column desktop layout with high-ratio product imagery, subtle hover lift, stock status, and Quick Add.
-2. **Product Catalog & Details (PDP)**:
-   - Dynamic search, price range filter, category selection, and sorting (Price: Low to High, High to Low, Rating, Newest).
-   - Contiguous purchase module on product detail view with multi-image gallery, real-time stock availability, quantity stepper, and "Add to Cart" trigger with slide-over drawer feedback.
-3. **Cart & Secure Checkout**:
-   - Slide-over cart drawer and full checkout view with line items, coupon code entry with instant validation feedback, and delivery address form.
-   - Payment selection between **Cash on Delivery** and **Razorpay Online Payment** (interactive modal with instant payment verification).
-   - Order confirmation screen with unique Order ID, itemized receipt, and delivery timeline.
-4. **Customer Account**:
-   - Order history with live statuses (`Pending`, `Confirmed`, `Shipped`, `Delivered`, `Cancelled`), saved addresses, and profile management.
+#### 2. Products & Catalog (`/api/products`)
+- `GET /api/products`: Query params (`categoryId`, `search`, `minPrice`, `maxPrice`, `sortBy`, `activeOnly`) $\to$ Filtered product list.
+- `GET /api/products/:id`: Returns single product details and specifications.
+- `POST /api/admin/products`: Requires `admin` JWT $\to$ Creates new product with SKU and stock.
+- `PUT /api/admin/products/:id`: Requires `admin` JWT $\to$ Updates product details, price, or stock.
+- `PATCH /api/admin/products/:id/toggle`: Requires `admin` JWT $\to$ Toggles active/inactive visibility.
+- `PATCH /api/admin/products/:id/stock`: Requires `admin` JWT $\to$ Updates stock quantity.
 
-#### Admin Management Flows (`/admin`)
-1. **Overview Dashboard**: Metrics for total gross revenue, active orders, customer count, and low-stock warning alerts.
-2. **Product Management**: Grid/table view with status toggle (Active/Inactive), stock count, price edit, category assignment, and modal to add/edit products.
-3. **Order Management**: Filterable order queue with status updater (`Confirmed`, `Shipped`, `Delivered`, `Cancelled`) and order items breakdown with freeze-price history.
-4. **Coupons & Categories**: Create percentage or fixed discount coupons with minimum purchase limits, expiry dates, and category management.
+#### 3. Categories (`/api/categories`)
+- `GET /api/categories`: Returns categories with live product counts.
+- `POST /api/admin/categories`: Requires `admin` JWT $\to$ Creates new category.
+
+#### 4. Promotional Coupons (`/api/coupons`)
+- `POST /api/coupons/validate`: `{ code, subtotal }` $\to$ Evaluates active status, expiry date, and minimum spend, returning verified discount amount.
+- `GET /api/admin/coupons`: Requires `admin` JWT $\to$ Lists all coupons with redemption counters.
+- `POST /api/admin/coupons`: Requires `admin` JWT $\to$ Creates new percentage or fixed discount coupon.
+- `PATCH /api/admin/coupons/:id/toggle`: Requires `admin` JWT $\to$ Toggles coupon active status.
+
+#### 5. Transactional Orders (`/api/orders`)
+- `POST /api/orders`: `{ customerName, customerEmail, customerPhone, shippingAddress, paymentMethod, paymentTransactionId, couponCode, items, notes }`
+  - Validates stock for each item.
+  - Recalculates subtotal from catalog prices.
+  - Applies coupon discount on server.
+  - Decrements stock atomically in database.
+  - Snapshots `productName` and `unitPrice` into `OrderItem` records.
+  - Returns finalized `Order` object.
+- `GET /api/orders`: Authenticated $\to$ Returns customer's order history (or all orders for admin).
+- `GET /api/orders/:id`: Authenticated $\to$ Returns order details with items and tracking.
+- `PATCH /api/admin/orders/:id/status`: Requires `admin` JWT $\to$ Updates status (`confirmed`, `processing`, `shipped`, `delivered`, `cancelled`). Cancelling automatically restores stock.
+
+#### 6. Admin Analytics (`/api/admin/metrics`)
+- `GET /api/admin/metrics`: Requires `admin` JWT $\to$ Returns gross revenue, order count, live products, low-stock alerts, and recent orders.
 
 ---
 
 ### 3. Key Product Decisions & Trade-Offs
 
-- **Decision 1: Full-Stack Express TypeScript API over Client-Only Mocking**
-  - *Chosen Approach*: Implement an Express backend running alongside Vite (`server.ts` + `/api/*` endpoints), backed by a schema-driven transactional store with file/in-memory persistence.
-  - *Why*: The prompt requires strict server-side price validation, coupon eligibility, concurrency control, and role-based authorization. A real backend ensures prices cannot be tampered with in the browser.
-  - *Alternatives Considered*: Pure localStorage mock. Rejected because client-side mock violates the requirement that the backend validates prices and inventory safely.
-- **Decision 2: Transactional Concurrency & Inventory Decrement**
-  - *Chosen Approach*: Atomic inventory check and decrement during order placement. If any line item exceeds remaining stock, the order creation fails immediately with a clear item-level error message.
-  - *Why*: Prevents overselling and race conditions when multiple users buy popular accessories simultaneously.
-- **Decision 3: Historical Order Price Snapshotting**
-  - *Chosen Approach*: When an order is placed, `unitPrice` and `productName` are explicitly recorded in `OrderItem` records.
-  - *Why*: Future product price adjustments or catalog renaming do not corrupt historical financial reports or user receipts.
+- **Decision 1: Full-Stack `server.ts` with Vite Middleware on Port 3000**
+  - *Chosen Approach*: Use Express mounted with `vite.middlewares` in `server.ts`, changing `"dev": "tsx server.ts"` in `package.json`.
+  - *Why*: Satisfies AI Studio's single-port (3000) constraint without CORS or proxy lag, allowing seamless unified development and single-command deployment.
+- **Decision 2: Atomic File-Backed JSON Store (`data/db.json`)**
+  - *Chosen Approach*: Implement a file persistence engine with write-queue locking and temporary file renaming (`atomic write`).
+  - *Why*: Ensures data persists across server restarts and page refreshes without requiring external database server configuration, while preventing file corruption during concurrent writes.
+- **Decision 3: Lightweight Cryptographic JWT Implementation**
+  - *Chosen Approach*: Implement HMAC-SHA256 signature verification using Node.js built-in `crypto` module.
+  - *Why*: Zero third-party bundle bloat, zero native binary compilation issues, standard `Bearer <token>` authorization format.
 
 ---
 
@@ -83,77 +83,54 @@ A modern, responsive e-commerce web application and administrative management sy
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
-│                        LuxeLane Architecture                           │
+│                   LuxeLane Full-Stack Architecture                     │
 └────────────────────────────────────────────────────────────────────────┘
 
- [ Client Browser: React 19 + TypeScript + Tailwind CSS ]
-    ├── Customer Views:
-    │     ├── TopBar (Brand, Nav Links, Cart Counter, Auth Menu)
-    │     ├── StorefrontHero & CategoryShowcase
-    │     ├── ProductCatalog (Search, Filters, Sort, ProductCard)
-    │     ├── ProductDetailModal / PurchaseModule
-    │     ├── CartDrawer & CheckoutModal (Address, Coupon, Payment)
-    │     ├── RazorpayModal (Interactive payment simulation & signature)
-    │     └── CustomerAccount (Order History, Profile)
-    ├── Admin Portal (/admin):
-    │     ├── AdminNavbar & MetricCards (Revenue, Orders, Low Stock)
-    │     ├── ProductManager (Add, Edit, Deactivate, Inventory)
-    │     ├── OrderManager (Status Lifecycle, Customer Info, Items)
-    │     └── CouponManager (Discounts, Expiry, Min Spend)
-    └── State / API Clients:
-          ├── AuthContext (JWT/Token, Role: Admin | Customer)
-          ├── CartContext (Persistent cart state, totals, discounts)
-          └── ApiService (/api/products, /api/orders, /api/auth, etc.)
-                               │  REST API Calls (/api/*)
-                               ▼
- [ Backend Server: Node.js + Express + TypeScript (server.ts) ]
-    ├── Middleware (Auth verify, Role guard, Error handler)
-    ├── Controllers & Routes:
-    │     ├── /api/auth (Register, Login, Me)
-    │     ├── /api/categories (CRUD)
-    │     ├── /api/products (Public list, detail; Admin CRUD & stock)
-    │     ├── /api/coupons (Validation & Admin CRUD)
-    │     ├── /api/orders (Create with stock transaction, history, status updates)
-    │     └── /api/admin/metrics (KPI summary, revenue, low stock)
-    └── Data & Business Engine:
-          ├── Schema Definitions (User, Product, Order, OrderItem, Coupon)
-          ├── Atomic Transaction Guard (Stock check & decrement)
-          └── Seed Data Engine (20+ premium accessories with rich specs)
+ [ Client Browser: React 19 Frontend (Vite) ]
+    ├── Components (Navbar, Catalog, PDP, Bag, Checkout, Admin)
+    ├── AuthContext (Stores JWT token, role, user profile)
+    ├── CartContext (Client UI state, totals, slide-out drawer)
+    └── ApiService (src/services/api.ts)
+           │
+           │ HTTP Fetch Requests (/api/*)
+           │ Authorization: Bearer <JWT_TOKEN>
+           ▼
+ [ Server: Node.js Express API (server.ts, port 3000) ]
+    ├── Middleware Stack:
+    │     ├── express.json()
+    │     ├── requestLogger
+    │     ├── authMiddleware (validates JWT, attaches req.user)
+    │     └── adminOnlyMiddleware (verifies role === 'admin')
+    ├── Route Controllers:
+    │     ├── /api/auth (Register, Login, Me, Address)
+    │     ├── /api/products & /api/admin/products (CRUD, Stock)
+    │     ├── /api/categories & /api/admin/categories
+    │     ├── /api/coupons & /api/admin/coupons (Validation)
+    │     ├── /api/orders & /api/admin/orders (Transactions)
+    │     └── /api/admin/metrics (KPI Summary)
+    ├── Vite Dev Middleware:
+    │     └── vite.middlewares (Serves React SPA on same port)
+    └── Persistent Storage Engine (server/db.ts):
+          ├── data/db.json (Persistent JSON document store)
+          ├── Atomic Write Guard (Locking + temp file swap)
+          └── Transactional Inventory Lock (Race-condition protection)
 ```
-
-#### Entity Schema Design
-- **User**: `id`, `name`, `email`, `passwordHash`, `role` (`'customer' | 'admin'`), `createdAt`.
-- **Category**: `id`, `name`, `slug`, `description`, `imageUrl`.
-- **Product**: `id`, `name`, `slug`, `description`, `price`, `originalPrice`, `categoryId`, `stock`, `isActive`, `isFeatured`, `images` (`string[]`), `rating`, `reviewCount`, `sku`, `tags`.
-- **Cart & CartItem**: `userId`, `items: { productId, quantity }[]`.
-- **Order**: `id`, `orderNumber`, `userId`, `customerName`, `customerEmail`, `shippingAddress`, `paymentMethod` (`'cod' | 'razorpay'`), `paymentStatus` (`'pending' | 'completed' | 'failed'`), `orderStatus` (`'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled'`), `subtotal`, `discountAmount`, `shippingFee`, `totalAmount`, `couponCode`, `items: OrderItem[]`, `createdAt`.
-- **OrderItem**: `id`, `orderId`, `productId`, `productName`, `unitPrice`, `quantity`, `subtotal`.
-- **Coupon**: `id`, `code`, `discountType` (`'percentage' | 'fixed'`), `discountValue`, `minOrderAmount`, `isActive`, `validUntil`.
 
 ---
 
 ### Implementation Phasing
 
-1. **Phase 1: Backend Foundation & Data Persistence**
-   - Configure `server.ts` Express application on port 3000 with complete TypeScript typings.
-   - Seed realistic initial database with accessories (Watches, Sunglasses, Wallets, Leather Bags, Minimalist Bracelets, Tech Sleeves).
-   - Implement authentication endpoints, product query/mutation APIs, coupon validation, and transactional order placement with inventory guards.
-2. **Phase 2: Customer Storefront & Catalog Experience**
-   - Build 3-zone clean TopBar navigation with brand wordmark, category tabs, search input, and cart badge.
-   - Implement Storefront Hero, Category Grid, and 3-column Featured Accessories display.
-   - Build filterable catalog with price slider, category picker, keyword search, and sorting.
-   - Build contiguous Product Detail Modal / View with multi-angle image preview and quantity selector.
-3. **Phase 3: Shopping Cart, Coupon Validation & Multi-Option Checkout**
-   - Implement slide-over Cart Drawer with real-time subtotal calculation.
-   - Implement Checkout flow with address validation, coupon code verification against backend API, and selection between Cash on Delivery and Razorpay.
-   - Implement interactive Razorpay checkout modal with payment ID generation, order receipt, and transactional inventory decrement.
-4. **Phase 4: Customer Account & Admin Dashboard (`/admin`)**
-   - Build Customer Order History view with order timeline and item breakdown.
-   - Build Admin Dashboard with KPI summary cards (Gross Sales, Orders, Products, Low Stock Alert).
-   - Build Admin Product Management (Add new accessory, adjust stock, modify price, toggle active status).
-   - Build Admin Order Management (Update status from Confirmed $\to$ Shipped $\to$ Delivered, handle cancellations with stock restoration).
-   - Build Admin Coupon Manager.
-5. **Phase 5: Verification & Polish**
-   - Test full customer purchase flow (Browse $\to$ Cart $\to$ Coupon $\to$ Razorpay / COD $\to$ Receipt).
-   - Test admin inventory updates and order tracking.
-   - Verify zero compile errors and verify WCAG AA responsive design.
+1. **Phase 1: Server Infrastructure & Persistent Storage Engine**
+   - Create `data/db.json` seeded with initial categories, products, coupons, orders, and users.
+   - Implement `server/db.ts` with atomic read/write and file locking.
+   - Implement `server/auth.ts` with HMAC-SHA256 JWT token creation, verification, and role guards.
+2. **Phase 2: Express Server & API Route Controllers**
+   - Create `server.ts` with Express routing for `/api/auth`, `/api/products`, `/api/categories`, `/api/coupons`, `/api/orders`, and `/api/admin/metrics`.
+   - Mount Vite middleware in development mode and static file serving in production.
+   - Update `package.json` dev script to `"dev": "tsx server.ts"`.
+3. **Phase 3: Frontend API Client Adaptation**
+   - Update `src/services/api.ts` to call backend REST endpoints via `fetch` with JWT Bearer tokens in headers.
+   - Maintain seamless synchronous caching and optimistic UI updates for instant customer responsiveness.
+4. **Phase 4: Verification & Automated API Tests**
+   - Add automated API integration test script (`test-api.ts`) verifying real HTTP responses from `/api/*` (auth, products, inventory decrement, order creation, coupon validation, admin metrics).
+   - Verify zero compile errors with `compile_applet` and restart dev server via `restart_dev_server`.

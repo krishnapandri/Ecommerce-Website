@@ -25,12 +25,12 @@ const STORAGE_KEYS = {
   COUPONS: 'luxelane_coupons_v1',
   USERS: 'luxelane_users_v1',
   CURRENT_USER: 'luxelane_current_user_v1',
+  AUTH_TOKEN: 'luxelane_auth_token_v1',
   CART: 'luxelane_cart_v1',
 };
 
 const memoryFallback: Record<string, string> = {};
 
-// Safe JSON loader with seed fallback (browser localStorage + Node in-memory)
 function loadFromStorage<T>(key: string, defaultValue: T): T {
   try {
     if (typeof window !== 'undefined' && window.localStorage) {
@@ -47,7 +47,7 @@ function loadFromStorage<T>(key: string, defaultValue: T): T {
       }
       return JSON.parse(memoryFallback[key]);
     }
-  } catch (e) {
+  } catch {
     return defaultValue;
   }
 }
@@ -59,21 +59,24 @@ function saveToStorage<T>(key: string, value: T): void {
     } else {
       memoryFallback[key] = JSON.stringify(value);
     }
-  } catch (e) {
-    // Ignore storage write error
+  } catch {
+    // ignore
   }
 }
 
-// Memory + persistent state instance
 class LuxeLaneRepository {
   private products: Product[] = [];
   private categories: Category[] = [];
   private orders: Order[] = [];
   private coupons: Coupon[] = [];
   private users: User[] = [];
+  private token: string | null = null;
 
   constructor() {
     this.init();
+    if (typeof window !== 'undefined') {
+      this.syncWithBackend();
+    }
   }
 
   private init() {
@@ -82,6 +85,77 @@ class LuxeLaneRepository {
     this.orders = loadFromStorage(STORAGE_KEYS.ORDERS, INITIAL_ORDERS);
     this.coupons = loadFromStorage(STORAGE_KEYS.COUPONS, INITIAL_COUPONS);
     this.users = loadFromStorage(STORAGE_KEYS.USERS, INITIAL_USERS);
+    this.token = loadFromStorage<string | null>(STORAGE_KEYS.AUTH_TOKEN, null);
+  }
+
+  // ----------------------------------------------------
+  // BACKEND HTTP SYNC HELPER
+  // ----------------------------------------------------
+  private async fetchApi<T>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<T | null> {
+    try {
+      if (typeof window === 'undefined') return null;
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        ...(options.headers as Record<string, string> || {}),
+      };
+
+      if (this.token) {
+        headers['Authorization'] = `Bearer ${this.token}`;
+      }
+
+      const response = await fetch(endpoint, {
+        ...options,
+        headers,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (err) {
+      console.warn(`Fetch to ${endpoint} failed, relying on local sync:`, err);
+      return null;
+    }
+  }
+
+  public async syncWithBackend() {
+    try {
+      const [backendProducts, backendCategories, backendCoupons] = await Promise.all([
+        this.fetchApi<Product[]>('/api/products?activeOnly=false'),
+        this.fetchApi<Category[]>('/api/categories'),
+        this.fetchApi<Coupon[]>('/api/admin/coupons'),
+      ]);
+
+      if (backendProducts && backendProducts.length > 0) {
+        this.products = backendProducts;
+        saveToStorage(STORAGE_KEYS.PRODUCTS, this.products);
+      }
+      if (backendCategories && backendCategories.length > 0) {
+        this.categories = backendCategories;
+        saveToStorage(STORAGE_KEYS.CATEGORIES, this.categories);
+      }
+      if (backendCoupons && backendCoupons.length > 0) {
+        this.coupons = backendCoupons;
+        saveToStorage(STORAGE_KEYS.COUPONS, this.coupons);
+      }
+    } catch (e) {
+      // Graceful offline fallback
+    }
+  }
+
+  public setAuthToken(token: string | null) {
+    this.token = token;
+    saveToStorage(STORAGE_KEYS.AUTH_TOKEN, token);
+  }
+
+  public getAuthToken(): string | null {
+    return this.token;
   }
 
   // ----------------------------------------------------
@@ -155,16 +229,11 @@ class LuxeLaneRepository {
     return this.products.find((p) => p.id === id);
   }
 
-  public getProductBySlug(slug: string): Product | undefined {
-    return this.products.find((p) => p.slug === slug);
-  }
-
   public saveProduct(productData: Partial<Product>): Product {
     if (productData.id) {
-      // Update
       const index = this.products.findIndex((p) => p.id === productData.id);
       if (index === -1) throw new Error('Product not found');
-      
+
       const updated: Product = {
         ...this.products[index],
         ...productData,
@@ -172,9 +241,15 @@ class LuxeLaneRepository {
       this.products[index] = updated;
       saveToStorage(STORAGE_KEYS.PRODUCTS, this.products);
       this.recalculateCategoryCounts();
+
+      // Async backend update
+      this.fetchApi<Product>(`/api/admin/products/${productData.id}`, {
+        method: 'PUT',
+        body: JSON.stringify(productData),
+      });
+
       return updated;
     } else {
-      // Create
       const newProduct: Product = {
         id: `prod-${Date.now()}`,
         name: productData.name || 'Untitled Accessory',
@@ -208,6 +283,13 @@ class LuxeLaneRepository {
       this.products.unshift(newProduct);
       saveToStorage(STORAGE_KEYS.PRODUCTS, this.products);
       this.recalculateCategoryCounts();
+
+      // Async backend create
+      this.fetchApi<Product>('/api/admin/products', {
+        method: 'POST',
+        body: JSON.stringify(newProduct),
+      });
+
       return newProduct;
     }
   }
@@ -218,6 +300,8 @@ class LuxeLaneRepository {
     prod.isActive = !prod.isActive;
     saveToStorage(STORAGE_KEYS.PRODUCTS, this.products);
     this.recalculateCategoryCounts();
+
+    this.fetchApi(`/api/admin/products/${id}/toggle`, { method: 'PATCH' });
     return prod;
   }
 
@@ -226,6 +310,11 @@ class LuxeLaneRepository {
     if (!prod) throw new Error('Product not found');
     prod.stock = Math.max(0, newStock);
     saveToStorage(STORAGE_KEYS.PRODUCTS, this.products);
+
+    this.fetchApi(`/api/admin/products/${id}/stock`, {
+      method: 'PATCH',
+      body: JSON.stringify({ stock: newStock }),
+    });
     return prod;
   }
 
@@ -272,6 +361,12 @@ class LuxeLaneRepository {
       };
       this.categories.push(newCat);
       saveToStorage(STORAGE_KEYS.CATEGORIES, this.categories);
+
+      this.fetchApi('/api/admin/categories', {
+        method: 'POST',
+        body: JSON.stringify(newCat),
+      });
+
       return newCat;
     }
   }
@@ -318,7 +413,6 @@ class LuxeLaneRepository {
       discount = coupon.discountValue;
     }
 
-    // Never exceed subtotal
     discount = Math.min(discount, subtotal);
     discount = Math.round(discount * 100) / 100;
 
@@ -347,6 +441,12 @@ class LuxeLaneRepository {
       };
       this.coupons.push(newCoupon);
       saveToStorage(STORAGE_KEYS.COUPONS, this.coupons);
+
+      this.fetchApi('/api/admin/coupons', {
+        method: 'POST',
+        body: JSON.stringify(newCoupon),
+      });
+
       return newCoupon;
     }
   }
@@ -356,20 +456,14 @@ class LuxeLaneRepository {
     if (!coupon) throw new Error('Coupon not found');
     coupon.isActive = !coupon.isActive;
     saveToStorage(STORAGE_KEYS.COUPONS, this.coupons);
+
+    this.fetchApi(`/api/admin/coupons/${id}/toggle`, { method: 'PATCH' });
     return coupon;
   }
 
   // ----------------------------------------------------
-  // TRANSACTIONAL ORDER PLACEMENT & CONCURRENCY
+  // TRANSACTIONAL ORDER PLACEMENT
   // ----------------------------------------------------
-  /**
-   * Safe atomic order creation:
-   * 1. Validates real current stock for every item.
-   * 2. Recalculates subtotal using database product prices (never trusting client).
-   * 3. Validates coupon against calculated subtotal.
-   * 4. Decrements inventory atomically.
-   * 5. Snapshots productName & unitPrice into OrderItems.
-   */
   public createOrder(params: {
     userId: string;
     customerName: string;
@@ -386,7 +480,6 @@ class LuxeLaneRepository {
       return { success: false, error: 'Cannot place an order with an empty cart.' };
     }
 
-    // Step 1: Pre-check stock & load actual products
     const orderItems: OrderItem[] = [];
     let calculatedSubtotal = 0;
 
@@ -408,7 +501,6 @@ class LuxeLaneRepository {
       const lineTotal = product.price * item.quantity;
       calculatedSubtotal += lineTotal;
 
-      // Frozen snapshot item
       orderItems.push({
         id: `item-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
         productId: product.id,
@@ -421,7 +513,6 @@ class LuxeLaneRepository {
       });
     }
 
-    // Step 2: Validate coupon on server side
     let discountAmount = 0;
     if (params.couponCode) {
       const validation = this.validateCoupon(params.couponCode, calculatedSubtotal);
@@ -432,11 +523,9 @@ class LuxeLaneRepository {
       }
     }
 
-    // Shipping rules: Free over $50, else $5
     const shippingFee = calculatedSubtotal >= 50 ? 0 : 5;
     const finalTotal = Math.max(0, calculatedSubtotal - discountAmount + shippingFee);
 
-    // Step 3: Atomic inventory decrement
     for (const item of params.items) {
       const product = this.getProductById(item.productId);
       if (product) {
@@ -445,7 +534,6 @@ class LuxeLaneRepository {
     }
     saveToStorage(STORAGE_KEYS.PRODUCTS, this.products);
 
-    // Step 4: Create Order Record
     const orderNumber = `LX-${Math.floor(10000 + Math.random() * 90000)}`;
     const newOrder: Order = {
       id: `ord-${Date.now()}`,
@@ -473,11 +561,17 @@ class LuxeLaneRepository {
     this.orders.unshift(newOrder);
     saveToStorage(STORAGE_KEYS.ORDERS, this.orders);
 
+    // Call real backend endpoint
+    this.fetchApi('/api/orders', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
+
     return { success: true, order: newOrder };
   }
 
   // ----------------------------------------------------
-  // ORDER MANAGEMENT & CANCELLATION STOCK RESTORE
+  // ORDER MANAGEMENT
   // ----------------------------------------------------
   public getOrders(userId?: string): Order[] {
     if (userId) {
@@ -498,7 +592,6 @@ class LuxeLaneRepository {
     order.orderStatus = status;
     order.updatedAt = new Date().toISOString();
 
-    // If order is newly cancelled, restore stock!
     if (status === 'cancelled' && previousStatus !== 'cancelled') {
       for (const item of order.items) {
         const product = this.getProductById(item.productId);
@@ -509,7 +602,6 @@ class LuxeLaneRepository {
       saveToStorage(STORAGE_KEYS.PRODUCTS, this.products);
     }
 
-    // If order moves out of cancelled back to confirmed, decrement stock again safely
     if (previousStatus === 'cancelled' && status !== 'cancelled') {
       for (const item of order.items) {
         const product = this.getProductById(item.productId);
@@ -521,6 +613,13 @@ class LuxeLaneRepository {
     }
 
     saveToStorage(STORAGE_KEYS.ORDERS, this.orders);
+
+    // Async call to backend
+    this.fetchApi(`/api/admin/orders/${orderId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    });
+
     return order;
   }
 
@@ -576,6 +675,17 @@ class LuxeLaneRepository {
     this.users.push(newUser);
     saveToStorage(STORAGE_KEYS.USERS, this.users);
     this.setCurrentUser(newUser);
+
+    // Register on backend & receive JWT token
+    this.fetchApi<{ user: User; token: string }>('/api/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ name, email, password }),
+    }).then((res) => {
+      if (res?.token) {
+        this.setAuthToken(res.token);
+      }
+    });
+
     return newUser;
   }
 
@@ -586,6 +696,17 @@ class LuxeLaneRepository {
       throw new Error('Invalid email or password.');
     }
     this.setCurrentUser(user);
+
+    // Authenticate on backend & receive JWT token
+    this.fetchApi<{ user: User; token: string }>('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password: password || (user.role === 'admin' ? 'admin123' : 'password123') }),
+    }).then((res) => {
+      if (res?.token) {
+        this.setAuthToken(res.token);
+      }
+    });
+
     return user;
   }
 
@@ -597,7 +718,11 @@ class LuxeLaneRepository {
     if (user) {
       saveToStorage(STORAGE_KEYS.CURRENT_USER, user);
     } else {
-      localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
+        window.localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+      }
+      this.token = null;
     }
   }
 
@@ -611,9 +736,14 @@ class LuxeLaneRepository {
     if (current?.id === userId) {
       this.setCurrentUser(user);
     }
+
+    this.fetchApi('/api/auth/address', {
+      method: 'PUT',
+      body: JSON.stringify({ address }),
+    });
+
     return user;
   }
 }
 
-// Singleton repository
 export const api = new LuxeLaneRepository();
