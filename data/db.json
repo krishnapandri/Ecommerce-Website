@@ -16,7 +16,7 @@
       "originalPrice": 129,
       "categoryId": "cat-1",
       "categoryName": "Watches",
-      "stock": 24,
+      "stock": 22,
       "isActive": true,
       "isFeatured": true,
       "isBestseller": true,
@@ -632,6 +632,85 @@
   ],
   "orders": [
     {
+      "id": "ord-1791815582176",
+      "orderNumber": "LX-65469",
+      "userId": "usr-1791815582173",
+      "customerName": "Test User",
+      "customerEmail": "testuser_1791815582173@example.com",
+      "customerPhone": "+1 555-4433",
+      "shippingAddress": {
+        "fullName": "Test User",
+        "street": "450 Lexington Ave",
+        "city": "New York",
+        "state": "NY",
+        "postalCode": "10017",
+        "country": "USA",
+        "phone": "+1 555-4433"
+      },
+      "paymentMethod": "razorpay",
+      "paymentStatus": "completed",
+      "paymentTransactionId": "pay_rzp_TEST12345",
+      "orderStatus": "cancelled",
+      "items": [
+        {
+          "id": "item-1791815582176-674",
+          "productId": "prod-1",
+          "productName": "Minimalist Obsidian Chronograph",
+          "unitPrice": 89,
+          "quantity": 1,
+          "subtotal": 89,
+          "image": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20400%20360%22%20width%3D%22100%25%22%20height%3D%22100%25%22%3E%0A%20%20%20%20%20%20%3Cdefs%3E%0A%20%20%20%20%20%20%20%20%3ClinearGradient%20id%3D%22bgGrad%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%0A%20%20%20%20%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%2318181B%22%2F%3E%0A%20%20%20%20%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%2327272A%22%2F%3E%0A%20%20%20%20%20%20%20%20%3C%2FlinearGradient%3E%0A%20%20%20%20%20%20%20%20%3ClinearGradient%20id%3D%22lensGrad%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220%22%20y2%3D%221%22%3E%0A%20%20%20%20%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23451A03%22%20stop-opacity%3D%220.9%22%2F%3E%0A%20%20%20%20%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%2378350F%22%20stop-opacity%3D%220.3%22%2F%3E%0A%20%20%20%20%20%20%20%20%3C%2FlinearGradient%3E%0A%20%20%20%20%20%20%20%20%3CradialGradient%20id%3D%22pedestalGrad%22%20cx%3D%2250%25%22%20cy%3D%2250%25%22%20r%3D%2250%25%22%3E%0A%20%20%20%20%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23FFFFFF%22%20stop-opacity%3D%220.08%22%2F%3E%0A%20%20%20%20%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23000000%22%20stop-opacity%3D%220%22%2F%3E%0A%20%20%20%20%20%20%20%20%3C%2FradialGradient%3E%0A%20%20%20%20%20%20%3C%2Fdefs%3E%0A%20%20%20%20%20%20%3C!--%20Background%20canvas%20--%3E%0A%20%20%20%20%20%20%3Crect%20width%3D%22400%22%20height%3D%22360%22%20fill%3D%22url(%23bgGrad)%22%2F%3E%0A%20%20%20%20%20%20%3C!--%20Subtle%20Pedestal%20Shadow%20%26%20Spotlight%20--%3E%0A%20%20%20%20%20%20%3Cellipse%20cx%3D%22200%22%20cy%3D%22270%22%20rx%3D%22140%22%20ry%3D%2240%22%20fill%3D%22url(%23pedestalGrad)%22%2F%3E%0A%20%20%20%20%20%20%3Cellipse%20cx%3D%22200%22%20cy%3D%22280%22%20rx%3D%22110%22%20ry%3D%2218%22%20fill%3D%22%23000000%22%20opacity%3D%220.35%22%2F%3E%0A%20%20%20%20%20%20%3C!--%20Product%20Artwork%20--%3E%0A%20%20%20%20%20%20%0A%20%20%20%20%20%20%3C!--%20Watch%20Dial%20and%20Bezel%20--%3E%0A%20%20%20%20%20%20%3Ccircle%20cx%3D%22200%22%20cy%3D%22180%22%20r%3D%22105%22%20fill%3D%22%2309090B%22%20stroke%3D%22%233F3F46%22%20stroke-width%3D%226%22%2F%3E%0A%20%20%20%20%20%20%3Ccircle%20cx%3D%22200%22%20cy%3D%22180%22%20r%3D%2295%22%20fill%3D%22%2318181B%22%20stroke%3D%22%2327272A%22%20stroke-width%3D%222%22%2F%3E%0A%20%20%20%20%20%20%3C!--%20Hour%20Indices%20--%3E%0A%20%20%20%20%20%20%3Cline%20x1%3D%22200%22%20y1%3D%2295%22%20x2%3D%22200%22%20y2%3D%22108%22%20stroke%3D%22%23D4D4D8%22%20stroke-width%3D%224%22%20stroke-linecap%3D%22round%22%2F%3E%0A%20%20%20%20%20%20%3Cline%20x1%3D%22200%22%20y1%3D%22252%22%20x2%3D%22200%22%20y2%3D%22265%22%20stroke%3D%22%23D4D4D8%22%20stroke-width%3D%224%22%20stroke-linecap%3D%22round%22%2F%3E%0A%20%20%20%20%20%20%3Cline%20x1%3D%22115%22%20y1%3D%22180%22%20x2%3D%22128%22%20y2%3D%22180%22%20stroke%3D%22%23D4D4D8%22%20stroke-width%3D%224%22%20stroke-linecap%3D%22round%22%2F%3E%0A%20%20%20%20%20%20%3Cline%20x1%3D%22272%22%20y1%3D%22180%22%20x2%3D%22285%22%20y2%3D%22180%22%20stroke%3D%22%23D4D4D8%22%20stroke-width%3D%224%22%20stroke-linecap%3D%22round%22%2F%3E%0A%20%20%20%20%20%20%3C!--%20Subdials%20--%3E%0A%20%20%20%20%20%20%3Ccircle%20cx%3D%22200%22%20cy%3D%22145%22%20r%3D%2218%22%20fill%3D%22none%22%20stroke%3D%22%2352525B%22%20stroke-width%3D%221.5%22%2F%3E%0A%20%20%20%20%20%20%3Ccircle%20cx%3D%22165%22%20cy%3D%22195%22%20r%3D%2218%22%20fill%3D%22none%22%20stroke%3D%22%2352525B%22%20stroke-width%3D%221.5%22%2F%3E%0A%20%20%20%20%20%20%3C!--%20Watch%20Hands%20--%3E%0A%20%20%20%20%20%20%3Cline%20x1%3D%22200%22%20y1%3D%22180%22%20x2%3D%22200%22%20y2%3D%22125%22%20stroke%3D%22%23F4F4F5%22%20stroke-width%3D%223.5%22%20stroke-linecap%3D%22round%22%2F%3E%0A%20%20%20%20%20%20%3Cline%20x1%3D%22200%22%20y1%3D%22180%22%20x2%3D%22242%22%20y2%3D%22180%22%20stroke%3D%22%23F4F4F5%22%20stroke-width%3D%223%22%20stroke-linecap%3D%22round%22%2F%3E%0A%20%20%20%20%20%20%3Cline%20x1%3D%22200%22%20y1%3D%22180%22%20x2%3D%22182%22%20y2%3D%22215%22%20stroke%3D%22%23F59E0B%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%2F%3E%0A%20%20%20%20%20%20%3Ccircle%20cx%3D%22200%22%20cy%3D%22180%22%20r%3D%225%22%20fill%3D%22%23F59E0B%22%2F%3E%0A%20%20%20%20%20%20%3C!--%20Straps%20--%3E%0A%20%20%20%20%20%20%3Cpath%20d%3D%22M165%2075%20L235%2075%20L230%2015%20L170%2015%20Z%22%20fill%3D%22%23292524%22%20stroke%3D%22%2344403C%22%20stroke-width%3D%222%22%2F%3E%0A%20%20%20%20%20%20%3Cpath%20d%3D%22M165%20285%20L235%20285%20L230%20345%20L170%20345%20Z%22%20fill%3D%22%23292524%22%20stroke%3D%22%2344403C%22%20stroke-width%3D%222%22%2F%3E%0A%20%20%20%20%0A%20%20%20%20%20%20%3C!--%20Subtle%20Brand%20Seal%20--%3E%0A%20%20%20%20%20%20%3Ctext%20x%3D%22200%22%20y%3D%22332%22%20font-family%3D%22'Plus%20Jakarta%20Sans'%2C%20sans-serif%22%20font-size%3D%2211%22%20font-weight%3D%22600%22%20letter-spacing%3D%223%22%20fill%3D%22%23A8A29E%22%20text-anchor%3D%22middle%22%20opacity%3D%220.8%22%3ELUXELANE%20%C2%B7%20ESSENTIALS%3C%2Ftext%3E%0A%20%20%20%20%3C%2Fsvg%3E"
+        }
+      ],
+      "subtotal": 89,
+      "discountAmount": 8.9,
+      "couponCode": "WELCOME10",
+      "shippingFee": 0,
+      "totalAmount": 80.1,
+      "createdAt": "2026-10-12T14:33:02.176Z",
+      "updatedAt": "2026-10-12T14:33:02.178Z"
+    },
+    {
+      "id": "ord-1791815381818",
+      "orderNumber": "LX-24002",
+      "userId": "guest-1791815381817",
+      "customerName": "Sarah Jenkins",
+      "customerEmail": "sarah.j@example.com",
+      "customerPhone": "+1 555-0192",
+      "shippingAddress": {
+        "fullName": "Sarah Jenkins",
+        "street": "742 Evergreen Terrace, Apt 4B",
+        "city": "Portland",
+        "state": "OR",
+        "postalCode": "97201",
+        "country": "United States",
+        "phone": "+1 555-0192"
+      },
+      "paymentMethod": "razorpay",
+      "paymentStatus": "completed",
+      "paymentTransactionId": "pay_rzp_ALWH6DN8",
+      "orderStatus": "confirmed",
+      "items": [
+        {
+          "id": "item-1791815381818-950",
+          "productId": "prod-1",
+          "productName": "Minimalist Obsidian Chronograph",
+          "unitPrice": 89,
+          "quantity": 2,
+          "subtotal": 178,
+          "image": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20400%20360%22%20width%3D%22100%25%22%20height%3D%22100%25%22%3E%0A%20%20%20%20%20%20%3Cdefs%3E%0A%20%20%20%20%20%20%20%20%3ClinearGradient%20id%3D%22bgGrad%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%0A%20%20%20%20%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%2318181B%22%2F%3E%0A%20%20%20%20%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%2327272A%22%2F%3E%0A%20%20%20%20%20%20%20%20%3C%2FlinearGradient%3E%0A%20%20%20%20%20%20%20%20%3ClinearGradient%20id%3D%22lensGrad%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220%22%20y2%3D%221%22%3E%0A%20%20%20%20%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23451A03%22%20stop-opacity%3D%220.9%22%2F%3E%0A%20%20%20%20%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%2378350F%22%20stop-opacity%3D%220.3%22%2F%3E%0A%20%20%20%20%20%20%20%20%3C%2FlinearGradient%3E%0A%20%20%20%20%20%20%20%20%3CradialGradient%20id%3D%22pedestalGrad%22%20cx%3D%2250%25%22%20cy%3D%2250%25%22%20r%3D%2250%25%22%3E%0A%20%20%20%20%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23FFFFFF%22%20stop-opacity%3D%220.08%22%2F%3E%0A%20%20%20%20%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23000000%22%20stop-opacity%3D%220%22%2F%3E%0A%20%20%20%20%20%20%20%20%3C%2FradialGradient%3E%0A%20%20%20%20%20%20%3C%2Fdefs%3E%0A%20%20%20%20%20%20%3C!--%20Background%20canvas%20--%3E%0A%20%20%20%20%20%20%3Crect%20width%3D%22400%22%20height%3D%22360%22%20fill%3D%22url(%23bgGrad)%22%2F%3E%0A%20%20%20%20%20%20%3C!--%20Subtle%20Pedestal%20Shadow%20%26%20Spotlight%20--%3E%0A%20%20%20%20%20%20%3Cellipse%20cx%3D%22200%22%20cy%3D%22270%22%20rx%3D%22140%22%20ry%3D%2240%22%20fill%3D%22url(%23pedestalGrad)%22%2F%3E%0A%20%20%20%20%20%20%3Cellipse%20cx%3D%22200%22%20cy%3D%22280%22%20rx%3D%22110%22%20ry%3D%2218%22%20fill%3D%22%23000000%22%20opacity%3D%220.35%22%2F%3E%0A%20%20%20%20%20%20%3C!--%20Product%20Artwork%20--%3E%0A%20%20%20%20%20%20%0A%20%20%20%20%20%20%3C!--%20Watch%20Dial%20and%20Bezel%20--%3E%0A%20%20%20%20%20%20%3Ccircle%20cx%3D%22200%22%20cy%3D%22180%22%20r%3D%22105%22%20fill%3D%22%2309090B%22%20stroke%3D%22%233F3F46%22%20stroke-width%3D%226%22%2F%3E%0A%20%20%20%20%20%20%3Ccircle%20cx%3D%22200%22%20cy%3D%22180%22%20r%3D%2295%22%20fill%3D%22%2318181B%22%20stroke%3D%22%2327272A%22%20stroke-width%3D%222%22%2F%3E%0A%20%20%20%20%20%20%3C!--%20Hour%20Indices%20--%3E%0A%20%20%20%20%20%20%3Cline%20x1%3D%22200%22%20y1%3D%2295%22%20x2%3D%22200%22%20y2%3D%22108%22%20stroke%3D%22%23D4D4D8%22%20stroke-width%3D%224%22%20stroke-linecap%3D%22round%22%2F%3E%0A%20%20%20%20%20%20%3Cline%20x1%3D%22200%22%20y1%3D%22252%22%20x2%3D%22200%22%20y2%3D%22265%22%20stroke%3D%22%23D4D4D8%22%20stroke-width%3D%224%22%20stroke-linecap%3D%22round%22%2F%3E%0A%20%20%20%20%20%20%3Cline%20x1%3D%22115%22%20y1%3D%22180%22%20x2%3D%22128%22%20y2%3D%22180%22%20stroke%3D%22%23D4D4D8%22%20stroke-width%3D%224%22%20stroke-linecap%3D%22round%22%2F%3E%0A%20%20%20%20%20%20%3Cline%20x1%3D%22272%22%20y1%3D%22180%22%20x2%3D%22285%22%20y2%3D%22180%22%20stroke%3D%22%23D4D4D8%22%20stroke-width%3D%224%22%20stroke-linecap%3D%22round%22%2F%3E%0A%20%20%20%20%20%20%3C!--%20Subdials%20--%3E%0A%20%20%20%20%20%20%3Ccircle%20cx%3D%22200%22%20cy%3D%22145%22%20r%3D%2218%22%20fill%3D%22none%22%20stroke%3D%22%2352525B%22%20stroke-width%3D%221.5%22%2F%3E%0A%20%20%20%20%20%20%3Ccircle%20cx%3D%22165%22%20cy%3D%22195%22%20r%3D%2218%22%20fill%3D%22none%22%20stroke%3D%22%2352525B%22%20stroke-width%3D%221.5%22%2F%3E%0A%20%20%20%20%20%20%3C!--%20Watch%20Hands%20--%3E%0A%20%20%20%20%20%20%3Cline%20x1%3D%22200%22%20y1%3D%22180%22%20x2%3D%22200%22%20y2%3D%22125%22%20stroke%3D%22%23F4F4F5%22%20stroke-width%3D%223.5%22%20stroke-linecap%3D%22round%22%2F%3E%0A%20%20%20%20%20%20%3Cline%20x1%3D%22200%22%20y1%3D%22180%22%20x2%3D%22242%22%20y2%3D%22180%22%20stroke%3D%22%23F4F4F5%22%20stroke-width%3D%223%22%20stroke-linecap%3D%22round%22%2F%3E%0A%20%20%20%20%20%20%3Cline%20x1%3D%22200%22%20y1%3D%22180%22%20x2%3D%22182%22%20y2%3D%22215%22%20stroke%3D%22%23F59E0B%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%2F%3E%0A%20%20%20%20%20%20%3Ccircle%20cx%3D%22200%22%20cy%3D%22180%22%20r%3D%225%22%20fill%3D%22%23F59E0B%22%2F%3E%0A%20%20%20%20%20%20%3C!--%20Straps%20--%3E%0A%20%20%20%20%20%20%3Cpath%20d%3D%22M165%2075%20L235%2075%20L230%2015%20L170%2015%20Z%22%20fill%3D%22%23292524%22%20stroke%3D%22%2344403C%22%20stroke-width%3D%222%22%2F%3E%0A%20%20%20%20%20%20%3Cpath%20d%3D%22M165%20285%20L235%20285%20L230%20345%20L170%20345%20Z%22%20fill%3D%22%23292524%22%20stroke%3D%22%2344403C%22%20stroke-width%3D%222%22%2F%3E%0A%20%20%20%20%0A%20%20%20%20%20%20%3C!--%20Subtle%20Brand%20Seal%20--%3E%0A%20%20%20%20%20%20%3Ctext%20x%3D%22200%22%20y%3D%22332%22%20font-family%3D%22'Plus%20Jakarta%20Sans'%2C%20sans-serif%22%20font-size%3D%2211%22%20font-weight%3D%22600%22%20letter-spacing%3D%223%22%20fill%3D%22%23A8A29E%22%20text-anchor%3D%22middle%22%20opacity%3D%220.8%22%3ELUXELANE%20%C2%B7%20ESSENTIALS%3C%2Ftext%3E%0A%20%20%20%20%3C%2Fsvg%3E",
+          "selectedColor": "Matte Black"
+        }
+      ],
+      "subtotal": 178,
+      "discountAmount": 0,
+      "shippingFee": 0,
+      "totalAmount": 178,
+      "notes": "",
+      "createdAt": "2026-10-12T14:29:41.818Z",
+      "updatedAt": "2026-10-12T14:29:41.818Z"
+    },
+    {
       "id": "ord-1791744089614",
       "orderNumber": "LX-72527",
       "userId": "usr-1791744089612",
@@ -769,7 +848,7 @@
       "minOrderAmount": 0,
       "isActive": true,
       "validUntil": "2027-12-31",
-      "usageCount": 43
+      "usageCount": 44
     },
     {
       "id": "coup-2",
@@ -829,6 +908,14 @@
       "role": "customer",
       "passwordHash": "dbe1dc08eba03d8b34ed29c475329f8cd670e8a40f1fff1cf5033086d358395f",
       "createdAt": "2026-10-11T18:41:29.612Z"
+    },
+    {
+      "id": "usr-1791815582173",
+      "name": "Test User",
+      "email": "testuser_1791815582173@example.com",
+      "role": "customer",
+      "passwordHash": "dbe1dc08eba03d8b34ed29c475329f8cd670e8a40f1fff1cf5033086d358395f",
+      "createdAt": "2026-10-12T14:33:02.173Z"
     }
   ]
 }

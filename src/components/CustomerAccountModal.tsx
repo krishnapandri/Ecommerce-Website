@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import { Order, Address } from '../types';
-import { X, User, Package, MapPin, LogOut, Shield, CheckCircle2, Clock } from 'lucide-react';
+import { X, User, Package, MapPin, LogOut, Shield, CheckCircle2, Clock, RefreshCw } from 'lucide-react';
+import { OrderTrackingVisualization } from './OrderTrackingVisualization';
 
 interface CustomerAccountModalProps {
   isOpen: boolean;
@@ -32,10 +33,26 @@ export const CustomerAccountModal: React.FC<CustomerAccountModalProps> = ({
     );
   });
   const [addressSavedNotice, setAddressSavedNotice] = useState(false);
+  const [orders, setOrders] = useState<Order[]>(() =>
+    currentUser ? api.getOrders(currentUser.id) : []
+  );
 
-  if (!isOpen || !currentUser) return null;
+  React.useEffect(() => {
+    if (currentUser) {
+      setOrders(api.getOrders(currentUser.id));
+      if (currentUser.address) {
+        setAddressForm(currentUser.address);
+      }
+    } else {
+      setOrders([]);
+    }
+  }, [isOpen, currentUser]);
 
-  const orders: Order[] = api.getOrders(currentUser.id);
+  const refreshOrders = () => {
+    if (currentUser) {
+      setOrders(api.getOrders(currentUser.id));
+    }
+  };
 
   const handleSaveAddress = (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,6 +60,8 @@ export const CustomerAccountModal: React.FC<CustomerAccountModalProps> = ({
     setAddressSavedNotice(true);
     setTimeout(() => setAddressSavedNotice(false), 2500);
   };
+
+  if (!isOpen || !currentUser) return null;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -126,7 +145,23 @@ export const CustomerAccountModal: React.FC<CustomerAccountModalProps> = ({
         {/* Content Body */}
         <div className="p-6 max-h-[70vh] overflow-y-auto">
           {activeTab === 'orders' && (
-            <div className="space-y-4">
+            <div className="space-y-6">
+              {/* Top status bar */}
+              <div className="flex items-center justify-between pb-2 border-b border-[#E7E5E4] text-xs">
+                <div>
+                  <span className="font-semibold text-[#1C1917]">Shipment Tracking & History</span>
+                  <span className="text-[#78716C] ml-1.5">({orders.length} {orders.length === 1 ? 'order' : 'orders'})</span>
+                </div>
+                <button
+                  onClick={refreshOrders}
+                  className="flex items-center gap-1.5 px-2.5 py-1 text-xs text-[#78350F] hover:bg-[#F5F5F4] rounded-lg transition-colors font-medium border border-[#E7E5E4]"
+                  title="Check for status updates"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Refresh Status</span>
+                </button>
+              </div>
+
               {orders.length === 0 ? (
                 <div className="text-center py-12 text-[#78716C]">
                   <Package className="w-10 h-10 mx-auto text-[#D6D3D1] mb-2" />
@@ -139,16 +174,17 @@ export const CustomerAccountModal: React.FC<CustomerAccountModalProps> = ({
                 orders.map((order) => (
                   <div
                     key={order.id}
-                    className="p-4 bg-[#FAFAF9] border border-[#E7E5E4] rounded-xl space-y-3 text-xs"
+                    className="p-5 bg-[#FAFAF9] border border-[#E7E5E4] rounded-2xl space-y-4 text-xs shadow-2xs"
                   >
-                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#E7E5E4] pb-2.5">
+                    {/* Order summary header */}
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#E7E5E4] pb-3">
                       <div className="flex items-center gap-2">
-                        <span className="font-mono font-semibold text-sm text-[#1C1917]">
+                        <span className="font-mono font-bold text-sm text-[#1C1917]">
                           {order.orderNumber}
                         </span>
                         <span className="text-[#A8A29E]">·</span>
                         <span className="text-[#78716C]">
-                          {new Date(order.createdAt).toLocaleDateString(undefined, {
+                          Placed on {new Date(order.createdAt).toLocaleDateString(undefined, {
                             month: 'short',
                             day: 'numeric',
                             year: 'numeric',
@@ -156,40 +192,69 @@ export const CustomerAccountModal: React.FC<CustomerAccountModalProps> = ({
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-3">
                         <span
-                          className={`px-2 py-0.5 rounded border text-[11px] font-semibold capitalize ${getStatusColor(
+                          className={`px-2.5 py-1 rounded-full border text-[11px] font-semibold capitalize ${getStatusColor(
                             order.orderStatus
                           )}`}
                         >
                           {order.orderStatus}
                         </span>
-                        <span className="text-xs font-mono font-semibold text-[#1C1917] tabular-nums">
+                        <span className="text-sm font-mono font-bold text-[#1C1917] tabular-nums">
                           ${order.totalAmount.toFixed(2)}
                         </span>
                       </div>
                     </div>
 
-                    {/* Order line items */}
-                    <div className="space-y-1.5">
-                      {order.items.map((item) => (
-                        <div key={item.id} className="flex justify-between items-center text-xs">
-                          <span className="text-[#57534E]">
-                            {item.productName} <span className="text-[#A8A29E]">× {item.quantity}</span>
-                          </span>
-                          <span className="font-mono tabular-nums text-[#1C1917]">
-                            ${item.subtotal.toFixed(2)}
-                          </span>
-                        </div>
-                      ))}
+                    {/* LIVE TRACKING VISUALIZATION PIPELINE */}
+                    <OrderTrackingVisualization order={order} initialExpanded={true} />
+
+                    {/* Order items breakdown */}
+                    <div className="bg-white rounded-xl border border-[#E7E5E4] p-3.5 space-y-2.5">
+                      <div className="text-[11px] font-semibold uppercase tracking-wider text-[#78716C]">
+                        Items in this package ({order.items.reduce((acc, i) => acc + i.quantity, 0)})
+                      </div>
+                      <div className="divide-y divide-[#F5F5F4]">
+                        {order.items.map((item) => (
+                          <div key={item.id} className="py-2 flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              {item.image && (
+                                <img
+                                  src={item.image}
+                                  alt={item.productName}
+                                  referrerPolicy="no-referrer"
+                                  className="w-9 h-9 object-cover rounded bg-[#18181B] shrink-0 border border-[#E7E5E4]"
+                                />
+                              )}
+                              <div className="truncate">
+                                <span className="font-medium text-[#1C1917] block truncate">
+                                  {item.productName}
+                                </span>
+                                <span className="text-[11px] text-[#78716C]">
+                                  Qty: {item.quantity} · ${item.unitPrice.toFixed(2)} each {item.selectedColor ? `· ${item.selectedColor}` : ''}
+                                </span>
+                              </div>
+                            </div>
+                            <span className="font-mono font-semibold tabular-nums text-[#1C1917] shrink-0">
+                              ${item.subtotal.toFixed(2)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
 
-                    <div className="pt-2 border-t border-[#E7E5E4] flex flex-wrap justify-between items-center text-[11px] text-[#78716C]">
-                      <span>
-                        Payment: {order.paymentMethod === 'razorpay' ? 'Razorpay Online' : 'Cash on Delivery'}
-                      </span>
+                    {/* Order footer metadata */}
+                    <div className="pt-2 flex flex-wrap justify-between items-center text-[11px] text-[#78716C] gap-2">
+                      <div className="flex items-center gap-1.5">
+                        <span>Payment Mode:</span>
+                        <strong className="text-[#1C1917]">
+                          {order.paymentMethod === 'razorpay' ? 'Razorpay Online (Paid)' : 'Cash on Delivery (Pay at delivery)'}
+                        </strong>
+                      </div>
                       {order.couponCode && (
-                        <span className="text-amber-800">Coupon: {order.couponCode} applied</span>
+                        <div className="text-amber-800 font-medium bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                          Coupon {order.couponCode} applied (-${order.discountAmount.toFixed(2)})
+                        </div>
                       )}
                     </div>
                   </div>
